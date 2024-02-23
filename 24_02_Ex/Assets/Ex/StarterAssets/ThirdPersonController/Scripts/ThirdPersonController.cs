@@ -109,8 +109,8 @@ namespace StarterAssets
         private const float _threshold = 0.01f;
 
         private bool _hasAnimator;
-        private float timer = 0f;
-        private float raycastInterval = 1f; // 1초에 한 번
+        private float attackTimer = 0f;
+        
         private bool IsCurrentDeviceMouse
         {
             get
@@ -124,9 +124,11 @@ namespace StarterAssets
         }
 
         public int attackDamage = 1;
+        public float attackCoolTime = 0.3f;
         Transform firePosition;
         private LineRenderer lineRenderer; // 레이캐스트 결과를 그릴 라인 렌더러
         public float lineLength = 100f; // 라인의 최대 길이
+        public Object impactParticlePrefab; 
 
 
         private void Awake()
@@ -168,14 +170,14 @@ namespace StarterAssets
             GroundedCheck();
             Move();
 
-            timer += Time.deltaTime;
+            attackTimer += Time.deltaTime;
 
             // 1초마다 레이캐스트 함수 호출
-            if (timer >= raycastInterval)
+            if (attackTimer >= attackCoolTime)
             {
                 PerformRaycastOncePerSecond();
                 // 타이머 리셋
-                timer = 0f;
+                attackTimer = 0f;
             }
         }
 
@@ -403,7 +405,12 @@ namespace StarterAssets
         void PerformRaycastOncePerSecond()
         {
             RaycastHit hit;
-            if (Physics.Raycast(firePosition.position, firePosition.forward, out hit))
+
+            // 레이 방향에 랜덤한 약간의 반동 추가
+            Vector3 recoil = new Vector3(Random.Range(-0.05f, 0.05f), Random.Range(-0.05f, 0.05f), Random.Range(-0.05f, 0.05f));
+            Vector3 rayDirection = firePosition.forward + recoil;
+
+            if (Physics.Raycast(firePosition.position, rayDirection, out hit))
             {
                 // Raycast가 어떤 오브젝트와 충돌했을 때의 처리
                 Debug.Log("Raycast hit: " + hit.collider.gameObject.name);
@@ -417,16 +424,21 @@ namespace StarterAssets
                         enemyComponent.OnDamage(attackDamage);
                     }
                 }
+                // 충돌 지점에 파티클 이펙트 생성
+                SpawnImpactParticle(hit.point);
 
-                
-                DrawLine(firePosition.position, hit.point, new Color(1,1,1,1));
+
+                DrawLine(firePosition.position, hit.point, new Color(1, 1, 1, 1));
             }
             else
             {
                 // 레이가 충돌하지 않은 경우, 레이를 최대 거리까지 그리기
-                DrawLine(firePosition.position, firePosition.position + firePosition.forward * lineLength, new Color(1, 1, 1, 1));
+                DrawLine(firePosition.position, firePosition.position + rayDirection * lineLength, new Color(1, 1, 1, 1));
             }
         }
+
+
+
 
         void DrawLine(Vector3 startPos, Vector3 endPos, Color color)
         {
@@ -434,6 +446,12 @@ namespace StarterAssets
             lineRenderer.endColor = color;
             lineRenderer.SetPosition(0, startPos);
             lineRenderer.SetPosition(1, endPos);
+        }
+
+        void SpawnImpactParticle(Vector3 position)
+        {
+            // 파티클 이펙트 프리팹을 인스턴스화하여 충돌 지점에 생성
+            Instantiate(impactParticlePrefab, position, Quaternion.identity);
         }
     }
 

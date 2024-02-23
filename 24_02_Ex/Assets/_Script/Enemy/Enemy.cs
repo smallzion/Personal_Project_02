@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,9 +7,9 @@ public class Enemy : MonoBehaviour
 {
     Rigidbody rigid;
     public float moveSpeed = 5.0f;
-    public Transform playerTransform;
-    Animator animator;
-
+    private Animator animator;
+    private Transform playerTransform;
+    private float currentSpeed = 0;
     public float hp = 3;
 
     private float Hp
@@ -16,10 +17,31 @@ public class Enemy : MonoBehaviour
         get { return hp; }
         set { hp = value; }
     }
+
+    // EnemySpawner 인스턴스 참조
+    private EnemySpawner enemySpawner;
+
     private void Awake()
     {
         rigid = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null)
+        {
+            playerTransform = playerObject.transform;
+        }
+        else
+        {
+            Debug.LogError("플레이어를 찾을 수 없습니다!");
+        }
+        currentSpeed = moveSpeed;
+
+        // EnemySpawner 인스턴스 참조
+        enemySpawner = FindObjectOfType<EnemySpawner>();
+        if (enemySpawner == null)
+        {
+            Debug.LogError("EnemySpawner를 찾을 수 없습니다!");
+        }
     }
 
     private void Update()
@@ -31,9 +53,11 @@ public class Enemy : MonoBehaviour
     {
         if (playerTransform != null)
         {
-            // 계산된 방향으로 이동
+            // 플레이어를 향하는 방향 벡터 계산
             Vector3 moveDirection = (playerTransform.position - transform.position).normalized;
-            rigid.velocity = moveSpeed * Time.deltaTime * moveDirection;
+
+            // 이동
+            transform.Translate(moveDirection * moveSpeed * Time.deltaTime, Space.World);
 
             // 플레이어를 바라보는 방향으로 회전
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
@@ -52,11 +76,13 @@ public class Enemy : MonoBehaviour
     public void OnDamage(int damage)
     {
         Debug.Log("함수 호출됨");
-        if(Hp - damage > 0)
+        if (Hp - damage > 0)
         {
             animator.SetTrigger("IsHit");
             Hp -= damage;
+            moveSpeed = -1;
             Debug.Log("남은체력" + Hp);
+            StartCoroutine(MoveStop());
         }
         else
         {
@@ -64,8 +90,36 @@ public class Enemy : MonoBehaviour
             OnDie();
         }
     }
+
+    public void RestoreSpeed()
+    {
+        moveSpeed = currentSpeed;
+    }
+
+    IEnumerator MoveStop()
+    {
+        float timer = 0.0f;
+        float animationLength = animator.GetCurrentAnimatorStateInfo(0).length;
+
+        // 애니메이션이 끝날 때까지 대기
+        while (timer < animationLength)
+        {
+            timer += Time.deltaTime;
+            yield return null; // 다음 프레임까지 대기
+        }
+
+        // 애니메이션이 끝나면 이동 속도를 복구
+        RestoreSpeed();
+    }
+
     private void OnDie()
     {
+        // EnemySpawner 인스턴스를 통해 DecreaseEnemyCount 메소드 호출
+        if (enemySpawner != null)
+        {
+            enemySpawner.DecreaseEnemyCount();
+        }
+
         moveSpeed = 0;
         animator.SetTrigger("IsDie");
         gameObject.GetComponent<Collider>().enabled = false;
