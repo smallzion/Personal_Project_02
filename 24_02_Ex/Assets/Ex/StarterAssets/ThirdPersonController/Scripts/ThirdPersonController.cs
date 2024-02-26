@@ -128,8 +128,7 @@ namespace StarterAssets
         Transform firePosition;
         private LineRenderer lineRenderer; // 레이캐스트 결과를 그릴 라인 렌더러
         public float lineLength = 100f; // 라인의 최대 길이
-        public Object impactParticlePrefab; 
-
+        public Object impactParticlePrefab;
 
         private void Awake()
         {
@@ -424,16 +423,35 @@ namespace StarterAssets
                         enemyComponent.OnDamage(attackDamage);
                     }
                 }
-                // 충돌 지점에 파티클 이펙트 생성
-                SpawnImpactParticle(hit.point);
+                if (hit.collider.gameObject.CompareTag("SpawnPoint"))
+                {
+                    Transform parent = hit.transform.parent;
+
+                    if (parent != null)
+                    {
+                        // 부모의 자식 중에서 히트된 오브젝트의 인덱스를 찾음
+                        for (int i = 0; i < parent.childCount; i++)
+                        {
+                            if (parent.GetChild(i) == hit.transform)
+                            {
+                                Debug.Log(i + "번째 오브젝트에요");
+                                parent.GetComponent<EnemySpawner>().DisableSpawnPoints(i);
+
+                                break;
+                            }
+                        }
+                    }
+                    // 충돌 지점에 파티클 이펙트 생성
+                    SpawnImpactParticle(hit.point);
 
 
-                DrawLine(firePosition.position, hit.point, new Color(1, 1, 1, 1));
-            }
-            else
-            {
-                // 레이가 충돌하지 않은 경우, 레이를 최대 거리까지 그리기
-                DrawLine(firePosition.position, firePosition.position + rayDirection * lineLength, new Color(1, 1, 1, 1));
+                    DrawLine(firePosition.position, hit.point, new Color(1, 1, 1, 1));
+                }
+                else
+                {
+                    // 레이가 충돌하지 않은 경우, 레이를 최대 거리까지 그리기
+                    DrawLine(firePosition.position, firePosition.position + rayDirection * lineLength, new Color(1, 1, 1, 1));
+                }
             }
         }
 
