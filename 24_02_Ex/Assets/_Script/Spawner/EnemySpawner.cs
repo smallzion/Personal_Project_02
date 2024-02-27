@@ -79,7 +79,6 @@ public class EnemySpawner : MonoBehaviour
     public int maxEnemies = 10; // 최대 생성할 적의 수
     private int currentEnemyCount = 0; // 현재 생성된 적의 수
     public float reactiveSpawnPoint = 10.0f;
-    int indexSpawnPoint;
     Collider[] spawnPointsCollider;
     private void Start()
     {

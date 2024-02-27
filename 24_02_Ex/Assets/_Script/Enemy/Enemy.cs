@@ -8,9 +8,10 @@ public class Enemy : MonoBehaviour
     Rigidbody rigid;
     public float moveSpeed = 5.0f;
     private Animator animator;
-    private Transform playerTransform;
+    private Transform endLine;
     private float currentSpeed = 0;
     public float hp = 3;
+    GameManager gameManager;
 
     private float Hp
     {
@@ -25,10 +26,10 @@ public class Enemy : MonoBehaviour
     {
         rigid = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
-        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null)
+        GameObject endLineObject = GameObject.FindGameObjectWithTag("EndLine");
+        if (endLineObject != null)
         {
-            playerTransform = playerObject.transform;
+            endLine = endLineObject.transform;
         }
         else
         {
@@ -42,6 +43,7 @@ public class Enemy : MonoBehaviour
         {
             Debug.LogError("EnemySpawner를 찾을 수 없습니다!");
         }
+        gameManager = FindAnyObjectByType<GameManager>();
     }
 
     private void Update()
@@ -51,10 +53,10 @@ public class Enemy : MonoBehaviour
 
     void OnMove()
     {
-        if (playerTransform != null)
+        if (endLine != null)
         {
             // 플레이어를 향하는 방향 벡터 계산
-            Vector3 moveDirection = (playerTransform.position - transform.position).normalized;
+            Vector3 moveDirection = (new Vector3(0 ,0, endLine.position.z) - new Vector3(0, 0, transform.position.z)).normalized;
 
             // 이동
             transform.Translate(moveDirection * moveSpeed * Time.deltaTime, Space.World);
@@ -121,8 +123,18 @@ public class Enemy : MonoBehaviour
         }
 
         moveSpeed = 0;
+        gameManager.count++;
         animator.SetTrigger("IsDie");
         gameObject.GetComponent<Collider>().enabled = false;
         Destroy(this.gameObject, animator.GetCurrentAnimatorStateInfo(0).length);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("EndLine"))
+        {
+            other.GetComponent<EndLine>().OnDamage();
+            OnDie();
+        }
     }
 }
