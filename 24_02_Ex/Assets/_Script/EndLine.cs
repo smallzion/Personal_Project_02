@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class EndLine : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class EndLine : MonoBehaviour
     }
     public void OnDamage()
     {
-        if(life > 0)
+        if(life > 1)
         {
             life--;
         }
@@ -23,7 +24,7 @@ public class EndLine : MonoBehaviour
     }
     void EndGame()
     {
-
+        SceneManager.LoadScene("Ending");
     }
     public int GetLife()
     {

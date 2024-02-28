@@ -134,7 +134,11 @@ public class Enemy : MonoBehaviour
         if (other.gameObject.CompareTag("EndLine"))
         {
             other.GetComponent<EndLine>().OnDamage();
-            OnDie();
+            if (enemySpawner != null)
+            {
+                enemySpawner.DecreaseEnemyCount();
+            }
+            Destroy(gameObject);
         }
     }
 }

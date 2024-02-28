@@ -80,11 +80,21 @@ public class EnemySpawner : MonoBehaviour
     private int currentEnemyCount = 0; // 현재 생성된 적의 수
     public float reactiveSpawnPoint = 10.0f;
     Collider[] spawnPointsCollider;
-    private void Start()
+
+    void Start()
     {
+        // 자식 오브젝트의 위치를 현재 위치를 기준으로 랜덤하게 설정
+        foreach (Transform spawnPoint in spawnPoints)
+        {
+            Vector3 currentPos = spawnPoint.position;
+            Vector3 randomOffset = new Vector3(Random.Range(-5f, 5f), 0f, Random.Range(-5f, 5f));
+            spawnPoint.position = currentPos + randomOffset;
+        }
+
         // 주기적으로 적을 생성하는 코루틴 시작
         StartCoroutine(SpawnEnemyRoutine());
     }
+
 
     public void Awake()
     {

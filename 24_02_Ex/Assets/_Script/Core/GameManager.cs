@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
@@ -46,9 +47,12 @@ public class GameManager : MonoBehaviour
         textCount.text = "Count: " + count;
 
         gameTime -= Time.deltaTime;
-        if (gameTime < 0)
+        if (gameTime < 1)
         {
-            SceneManager.LoadScene("Fail");
+            PlayerPrefs.SetInt("Count", count);
+            Debug.Log("변수 전달"+ PlayerPrefs.GetInt("Count"));
+            SceneManager.LoadScene("Ending");
+            
         }
         textTime.text = "Time: " + (int)gameTime;
 
